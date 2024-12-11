@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>PIDATO ISLAMI ESPADE</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+    body {
+      font-family: Arial, sans-serif;
+      height: 100vh;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      align-items: center;
+      text-align: center;
+      background-color: green;
+      color: white;
+      padding: 20px;
+      transition: background-color 1s ease;
+    }
+    #title {
+      font-size: 2.5em;
+      margin-top: -10px;
+    }
+    #timerDisplay {
+      font-size: 11em;
+      margin: 30px 0;
+      font-family: 'Digital-7 Mono', sans-serif;
+      color: white;
+    }
+    #smallTimer {
+      font-size: 1em;
+      margin-top: 10px;
+      font-family: 'Calibri', sans-serif;
+    }
+    #startButton, #stopButton, #restartButton {
+      font-size: 1.5em;
+      padding: 15px 20px;
+      margin: 10px;
+      border: 2px solid black;
+      border-radius: 10px;
+      cursor: pointer;
+      color: white;
+    }
+    #startButton {
+      background-color: green;
+    }
+    #stopButton {
+      background-color: red;
+    }
+    #restartButton {
+      background-color: blue;
+    }
+    .button-container {
+      display: flex;
+      justify-content: center;
+      gap: 15px;
+      margin-bottom: -30px;
+    }
+  </style>
+  <link href="https://fonts.cdnfonts.com/css/digital-7-mono" rel="stylesheet">
+</head>
+<body>
+
+  <div id="title">LOMBA PIDATO ISLAMI ESPADE 2024</div>
+  <div id="timerDisplay">05:00</div>
+  <div class="button-container">
+    <button id="stopButton" onclick="stopTimer()">Stop</button>
+    <button id="restartButton" onclick="restartTimer()">Restart</button>
+    <button id="startButton" onclick="startTimer()">Mulai</button>
+  </div>
+  <div id="smallTimer">00:00</div>
+
+  <script>
+    let timerInterval;
+    let smallTimerInterval;
+    let time = 300; // 5 minutes in seconds
+    let elapsedTime = 0; // Small timer counter
+    let isRunning = false;
+    let isLongBeepPlaying = false;
+
+    const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+
+    // Function to generate a beep sound
+    function playBeep(duration = 200, frequency = 1000, type = "sine") {
+      const oscillator = audioCtx.createOscillator();
+      const gainNode = audioCtx.createGain();
+
+      oscillator.connect(gainNode);
+      gainNode.connect(audioCtx.destination);
+
+      oscillator.type = type;
+      oscillator.frequency.value = frequency;
+      oscillator.start();
+
+      setTimeout(() => {
+        oscillator.stop();
+      }, duration);
+    }
+
+    // Function to start a continuous beep
+    function playLongBeep() {
+      if (isLongBeepPlaying) return;
+      isLongBeepPlaying = true;
+
+      const oscillator = audioCtx.createOscillator();
+      const gainNode = audioCtx.createGain();
+
+      oscillator.connect(gainNode);
+      gainNode.connect(audioCtx.destination);
+
+      oscillator.type = "sine";
+      oscillator.frequency.value = 440; // Continuous beep frequency
+      oscillator.start();
+
+      document.longBeepOscillator = oscillator; // Save for stopping later
+    }
+
+    // Function to stop the continuous beep
+    function stopLongBeep() {
+      if (!isLongBeepPlaying) return;
+      document.longBeepOscillator.stop();
+      isLongBeepPlaying = false;
+    }
+
+    // Format Timer
+    function formatTime(seconds) {
+      let minutes = Math.floor(Math.abs(seconds) / 60);
+      let secs = Math.abs(seconds) % 60;
+      let prefix = seconds < 0 ? "-" : "";
+      return `${prefix}${minutes.toString().padStart(2, "0")}:${secs.toString().padStart(2, "0")}`;
+    }
+
+    // Change Background Color
+    function changeBackground() {
+      if (time >= 91) { // 5:00 - 1:31
+        document.body.style.backgroundColor = "green";
+      } else if (time >= 31) { // 1:30 - 0:31
+        document.body.style.backgroundColor = "yellow";
+      } else { // 0:30 - 0:00
+        document.body.style.backgroundColor = "red";
+      }
+    }
+
+    // Start Timer
+    function startTimer() {
+      if (isRunning) return;
+      isRunning = true;
+
+      // Timer maju (small timer)
+      smallTimerInterval = setInterval(() => {
+        elapsedTime++;
+        document.getElementById('smallTimer').textContent = formatTime(elapsedTime);
+      }, 1000);
+
+      // Timer mundur (main timer)
+      timerInterval = setInterval(() => {
+        document.getElementById('timerDisplay').textContent = formatTime(time);
+        changeBackground();
+
+        if (time === 0) {
+          playLongBeep(); // Start long beep at 0
+        } else if (time <= 10 && time > 0) {
+          playBeep(); // Beep for the last 10 seconds
+        }
+
+        time--; // Decrement time
+      }, 1000);
+    }
+
+    // Stop Timer
+    function stopTimer() {
+      clearInterval(timerInterval);
+      clearInterval(smallTimerInterval);
+      stopLongBeep(); // Stop the long beep
+      isRunning = false;
+    }
+
+    // Restart Timer
+    function restartTimer() {
+      stopTimer();
+      time = 300; // Reset main timer
+      elapsedTime = 0; // Reset small timer
+      document.getElementById('timerDisplay').textContent = formatTime(time);
+      document.getElementById('smallTimer').textContent = formatTime(elapsedTime);
+      document.body.style.backgroundColor = "green"; // Reset background to green
+    }
+  </script>
+
+</body>
+</html>
